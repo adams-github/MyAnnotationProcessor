@@ -29,6 +29,8 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -46,7 +48,10 @@ import javax.tools.Diagnostic;
  *
  * @author Hannes Dorfmann
  */
-@AutoService(Processor.class) public class FactoryProcessor extends AbstractProcessor {
+@SupportedAnnotationTypes("com.example.annotations.Factory")
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
+@AutoService(Processor.class)
+public class FactoryProcessor extends AbstractProcessor {
 
   private Types typeUtils;
   private Elements elementUtils;
@@ -62,15 +67,15 @@ import javax.tools.Diagnostic;
     messager = processingEnv.getMessager();
   }
 
-  @Override public Set<String> getSupportedAnnotationTypes() {
-    Set<String> annotations = new LinkedHashSet<String>();
-    annotations.add(Factory.class.getCanonicalName());
-    return annotations;
-  }
-
-  @Override public SourceVersion getSupportedSourceVersion() {
-    return SourceVersion.latestSupported();
-  }
+//  @Override public Set<String> getSupportedAnnotationTypes() {
+//    Set<String> annotations = new LinkedHashSet<String>();
+//    annotations.add(Factory.class.getCanonicalName());
+//    return annotations;
+//  }
+//
+//  @Override public SourceVersion getSupportedSourceVersion() {
+//    return SourceVersion.latestSupported();
+//  }
 
   /**
    * Checks if the annotated element observes our rules
@@ -148,13 +153,15 @@ import javax.tools.Diagnostic;
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 
+    LogUtil logUtil = new LogUtil(filer);
+
     try {
 
       // Scan classes
       for (Element annotatedElement : roundEnv.getElementsAnnotatedWith(Factory.class)) {
 
         // Check if a class has been annotated with @Factory
-        if (annotatedElement.getKind() != ElementKind.CLASS) {
+        if (annotatedElement.getKind() != ElementKind.CLASS) {//判断annotatedElement是不是class类型
           throw new ProcessingException(annotatedElement, "Only classes can be annotated with @%s",
               Factory.class.getSimpleName());
         }
@@ -162,7 +169,7 @@ import javax.tools.Diagnostic;
         // We can cast it, because we know that it of ElementKind.CLASS
         TypeElement typeElement = (TypeElement) annotatedElement;
 
-        FactoryAnnotatedClass annotatedClass = new FactoryAnnotatedClass(typeElement);
+        FactoryAnnotatedClass annotatedClass = new FactoryAnnotatedClass(typeElement, logUtil);
 
         checkValidClass(annotatedClass);
 
@@ -184,6 +191,8 @@ import javax.tools.Diagnostic;
         factoryClass.generateCode(elementUtils, filer);
       }
       factoryClasses.clear();
+
+      logUtil.createLogFile();
     } catch (ProcessingException e) {
       error(e.getElement(), e.getMessage());
     } catch (IOException e) {

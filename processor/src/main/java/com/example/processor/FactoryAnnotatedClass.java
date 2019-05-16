@@ -32,11 +32,12 @@ public class FactoryAnnotatedClass {
   private String qualifiedGroupClassName;
   private String simpleFactoryGroupName;
   private String id;
+  private LogUtil logUtil;
 
   /**
    * @throws ProcessingException if id() from annotation is null
    */
-  public FactoryAnnotatedClass(TypeElement classElement) throws ProcessingException {
+  public FactoryAnnotatedClass(TypeElement classElement, LogUtil logUtil) throws ProcessingException {
     this.annotatedClassElement = classElement;
     Factory annotation = classElement.getAnnotation(Factory.class);
     id = annotation.id();
@@ -53,10 +54,16 @@ public class FactoryAnnotatedClass {
       qualifiedGroupClassName = clazz.getCanonicalName();
       simpleFactoryGroupName = clazz.getSimpleName();
     } catch (MirroredTypeException mte) {
-      DeclaredType classTypeMirror = (DeclaredType) mte.getTypeMirror();
+      DeclaredType classTypeMirror = (DeclaredType) mte.getTypeMirror();//获取mte的接口类型名， com.example.administrator.myannotationprocessor.Meal
       TypeElement classTypeElement = (TypeElement) classTypeMirror.asElement();
       qualifiedGroupClassName = classTypeElement.getQualifiedName().toString();
       simpleFactoryGroupName = classTypeElement.getSimpleName().toString();
+
+      logUtil.log("classTypeMirror", classTypeMirror.toString());
+      logUtil.log("classTypeElement", classTypeElement.toString());
+      logUtil.log("qualifiedGroupClassName", qualifiedGroupClassName);
+      logUtil.log("simpleFactoryGroupName", simpleFactoryGroupName);
+
     }
   }
 
